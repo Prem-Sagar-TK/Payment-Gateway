@@ -9,10 +9,11 @@ function randomKey() {
 }
 
 interface Props {
-  onPaymentCreated: (p: Payment, idempotencyKey: string) => void;
+  onPaymentCreated?: (p: Payment, idempotencyKey: string) => void;
+  onChargeCreated?: (res: any) => void;
 }
 
-export default function PaymentForm({ onPaymentCreated }: Props) {
+export function PaymentForm({ onPaymentCreated, onChargeCreated }: Props) {
   const [form, setForm] = useState({
     customerId: 'cus_123',
     amount: '4999',
@@ -42,18 +43,20 @@ export default function PaymentForm({ onPaymentCreated }: Props) {
         form.idempotencyKey,
       );
 
-      if (res.success && res.data) {
-        setLastResult(res.data);
-        onPaymentCreated(res.data, form.idempotencyKey);
-        if (res.data.idempotent) {
-          toast.success('↩ Idempotent replay — same payment returned', { icon: '🔁' });
+      const paymentData = res.data?.data;
+      if (res.success && paymentData) {
+        setLastResult(paymentData);
+        if (onPaymentCreated) onPaymentCreated(paymentData, form.idempotencyKey);
+        if (onChargeCreated) onChargeCreated(res.data);
+        if (paymentData.idempotent) {
+          toast.success('Idempotent replay: original payment returned');
         } else {
-          toast.success('✅ Payment created successfully!');
+          toast.success('Payment created successfully');
         }
       } else {
         toast.error(res.error?.message ?? 'Payment failed');
       }
-    } catch (e) {
+    } catch {
       toast.error('Network error — is the backend running?');
     } finally {
       setLoading(false);
@@ -114,7 +117,7 @@ export default function PaymentForm({ onPaymentCreated }: Props) {
             </button>
             <button
               className="btn btn-secondary btn-sm"
-              onClick={() => { navigator.clipboard.writeText(form.idempotencyKey); toast.success('Copied!'); }}
+              onClick={() => { navigator.clipboard.writeText(form.idempotencyKey); toast.success('Copied'); }}
               title="Copy key"
               style={{ flexShrink: 0 }}
             >
@@ -134,7 +137,7 @@ export default function PaymentForm({ onPaymentCreated }: Props) {
         <div style={{ marginTop: 16 }}>
           <div className="alert alert-success">
             <span>
-              {lastResult.idempotent ? '↩ Idempotent replay' : '✅ New payment'}
+              {lastResult.idempotent ? 'Idempotent replay' : 'New payment'}
               {' — '}
               <span className="mono">{lastResult.id}</span>
               {' — '}

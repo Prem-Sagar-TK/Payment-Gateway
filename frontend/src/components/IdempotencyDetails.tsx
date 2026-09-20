@@ -58,7 +58,7 @@ export const IdempotencyDetails: React.FC<IdempotencyDetailsProps> = ({
                   <td>
                     <span
                       className={`badge ${
-                        r.status === 'RESOLVED'
+                        r.status === 'RESOLVED' || r.status === 'SUCCEEDED'
                           ? 'badge-success'
                           : r.status === 'PROCESSING'
                           ? 'badge-warning'
@@ -70,20 +70,20 @@ export const IdempotencyDetails: React.FC<IdempotencyDetailsProps> = ({
                   </td>
                   <td className="font-mono text-xs text-slate-400">
                     <span className="truncate max-w-[140px] inline-block" title={r.requestHash}>
-                      {r.requestHash.substring(0, 16)}...
+                      {r.requestHash ? `${r.requestHash.substring(0, 16)}...` : '—'}
                     </span>
                   </td>
                   <td className="font-mono text-xs text-slate-300">
-                    {r.responseCode ? (
+                    {r.responseCode || r.responseStatus ? (
                       <span className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700">
-                        {r.responseCode}
+                        {r.responseCode || r.responseStatus}
                       </span>
                     ) : (
                       '—'
                     )}
                   </td>
                   <td className="text-xs text-slate-400 font-mono">
-                    {new Date(r.expiresAt).toLocaleTimeString()}
+                    {new Date(r.expiresAt || r.updatedAt || r.createdAt).toLocaleTimeString()}
                   </td>
                 </tr>
               ))

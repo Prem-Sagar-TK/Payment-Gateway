@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { v4 as uuidv4 } from 'uuid';
 import { ConcurrencyResult, ConcurrencyStats } from '../types';
 import { api } from '../services/api';
 import { ConcurrencyViz } from './ConcurrencyViz';
 import { Play, RotateCcw, AlertTriangle, CheckCircle2, ShieldCheck, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+const genId = () => Math.random().toString(36).substring(2, 10);
 
 interface ConcurrentTestProps {
   onTestComplete?: () => void;
@@ -13,7 +14,7 @@ interface ConcurrentTestProps {
 export const ConcurrentTest: React.FC<ConcurrentTestProps> = ({ onTestComplete }) => {
   const [concurrencyLevel, setConcurrencyLevel] = useState<number>(10);
   const [sameKey, setSameKey] = useState<boolean>(true);
-  const [key, setKey] = useState<string>(() => `test_${uuidv4().substring(0, 8)}`);
+  const [key, setKey] = useState<string>(() => `test_${genId()}`);
   const [amount, setAmount] = useState<number>(4999);
   const [currency, setCurrency] = useState<string>('INR');
   const [customerId, setCustomerId] = useState<string>('cus_test_123');
@@ -23,7 +24,7 @@ export const ConcurrentTest: React.FC<ConcurrentTestProps> = ({ onTestComplete }
   const [stats, setStats] = useState<ConcurrencyStats | null>(null);
 
   const generateNewKey = () => {
-    setKey(`test_${uuidv4().substring(0, 8)}`);
+    setKey(`test_${genId()}`);
   };
 
   const runTest = async () => {
@@ -38,7 +39,7 @@ export const ConcurrentTest: React.FC<ConcurrentTestProps> = ({ onTestComplete }
 
     try {
       const requests = Array.from({ length: concurrencyLevel }, (_, index) => {
-        const idempotencyKey = sameKey ? currentKey : `test_${uuidv4().substring(0, 8)}`;
+        const idempotencyKey = sameKey ? currentKey : `test_${genId()}`;
         const reqStartTime = performance.now();
 
         return api.createCharge(
@@ -57,7 +58,7 @@ export const ConcurrentTest: React.FC<ConcurrentTestProps> = ({ onTestComplete }
             status: res.status,
             isReplay: res.isReplay,
             paymentId: res.data?.data?.id,
-            error: res.error,
+            error: res.error?.message || (typeof res.error === 'string' ? res.error : undefined),
             latencyMs: latency,
             timestamp: Date.now(),
           };

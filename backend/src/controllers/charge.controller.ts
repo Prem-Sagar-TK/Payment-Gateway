@@ -64,6 +64,25 @@ export async function getCharge(
 }
 
 /**
+ * GET /api/v1/payments
+ */
+export async function listAllPayments(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const limit = Math.min(Number(req.query['limit']) || 50, 100);
+    const offset = Number(req.query['offset']) || 0;
+
+    const result = await paymentService.listAllPayments(limit, offset);
+    sendSuccess(res, result.payments, 200, req.requestId);
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
  * GET /api/v1/customers/:customerId/charges
  */
 export async function listCustomerCharges(

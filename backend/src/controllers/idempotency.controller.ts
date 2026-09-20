@@ -4,6 +4,27 @@ import { NotFoundError } from '../utils/errors';
 import { sendSuccess } from '../utils/response';
 
 /**
+ * GET /api/v1/idempotency/records
+ *
+ * Lists all idempotency records in the database.
+ */
+export async function listAllIdempotencyRecords(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const limit = Math.min(Number(req.query['limit']) || 50, 100);
+    const offset = Number(req.query['offset']) || 0;
+
+    const result = await idempotencyService.listAllRecords(limit, offset);
+    sendSuccess(res, result.records, 200, req.requestId);
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
  * GET /api/v1/idempotency/:key
  *
  * Returns the current state of an idempotency record for a given

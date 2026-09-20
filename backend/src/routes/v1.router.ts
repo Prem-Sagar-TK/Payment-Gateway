@@ -5,10 +5,11 @@ import { createChargeSchema } from '../validators/charge.validator';
 import {
   createCharge,
   getCharge,
+  listAllPayments,
   listCustomerCharges,
 } from '../controllers/charge.controller';
 import { createRefund } from '../controllers/refund.controller';
-import { getIdempotencyRecord } from '../controllers/idempotency.controller';
+import { getIdempotencyRecord, listAllIdempotencyRecords } from '../controllers/idempotency.controller';
 import { demoReset, setProviderMode, getProviderMode } from '../controllers/demo.controller';
 
 const router = Router();
@@ -23,9 +24,11 @@ router.get('/health', (_req, res) => {
   });
 });
 
-// ─── Charges ──────────────────────────────────────────────────────────────────
+// ─── Charges & Payments ───────────────────────────────────────────────────────
 router.post('/charges', validate(createChargeSchema), createCharge);
 router.get('/charges/:id', getCharge);
+router.post('/charges/:id/refund', createRefund);
+router.get('/payments', listAllPayments);
 
 // ─── Customers ────────────────────────────────────────────────────────────────
 router.get('/customers/:customerId/charges', listCustomerCharges);
@@ -34,6 +37,7 @@ router.get('/customers/:customerId/charges', listCustomerCharges);
 router.post('/refunds/:paymentId', createRefund);
 
 // ─── Idempotency ──────────────────────────────────────────────────────────────
+router.get('/idempotency/records', listAllIdempotencyRecords);
 router.get('/idempotency/:key', getIdempotencyRecord);
 
 // ─── Demo / Admin (development only) ─────────────────────────────────────────

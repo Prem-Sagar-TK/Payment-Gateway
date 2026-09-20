@@ -219,6 +219,27 @@ export class PaymentService {
   }
 
   /**
+   * listAllPayments
+   *
+   * Lists all payments across all customers, newest first.
+   */
+  async listAllPayments(
+    limit = 50,
+    offset = 0,
+  ): Promise<{ payments: PaymentResponse[]; total: number }> {
+    const [payments, total] = await prisma.$transaction([
+      prisma.payment.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset,
+      }),
+      prisma.payment.count(),
+    ]);
+
+    return { payments: payments.map((p) => this.toResponse(p)), total };
+  }
+
+  /**
    * getPaymentsByCustomer
    *
    * Lists all payments for a customer, newest first.

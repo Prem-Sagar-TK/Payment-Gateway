@@ -18,7 +18,17 @@ async function main() {
     persistent: true,
   });
 
-  await pg.initialise();
+  const pidFile = path.join(dataDir, 'postmaster.pid');
+  if (fs.existsSync(pidFile)) {
+    try {
+      fs.unlinkSync(pidFile);
+    } catch (e) {}
+  }
+
+  const isAlreadyInitialized = fs.existsSync(path.join(dataDir, 'PG_VERSION'));
+  if (!isAlreadyInitialized) {
+    await pg.initialise();
+  }
   await pg.start();
   console.log('[PostgreSQL] Server started successfully on port 5432.');
 

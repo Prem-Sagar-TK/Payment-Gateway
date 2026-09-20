@@ -164,6 +164,27 @@ export class IdempotencyService {
   }
 
   /**
+   * listAllRecords
+   *
+   * Lists all idempotency records, newest first.
+   */
+  async listAllRecords(
+    limit = 50,
+    offset = 0,
+  ): Promise<{ records: IdempotencyRecord[]; total: number }> {
+    const [records, total] = await prisma.$transaction([
+      prisma.idempotencyRecord.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset,
+      }),
+      prisma.idempotencyRecord.count(),
+    ]);
+
+    return { records, total };
+  }
+
+  /**
    * getRecord
    *
    * Fetches the idempotency record for debugging/demo endpoints.
