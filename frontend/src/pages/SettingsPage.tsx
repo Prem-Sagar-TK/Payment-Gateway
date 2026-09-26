@@ -57,7 +57,6 @@ export default function SettingsPage({ providerMode, providerLatency, onModeChan
         </p>
       </div>
 
-      {/* Mode selection */}
       <div className="g-card">
         <div className="g-card-header">
           <div className="g-card-icon green"><Settings2 size={20} /></div>
@@ -112,7 +111,6 @@ export default function SettingsPage({ providerMode, providerLatency, onModeChan
           ))}
         </div>
 
-        {/* Selected info */}
         <div className="alert alert-info" style={{ marginBottom: 24 }}>
           <span className="alert-icon"><Info size={16} /></span>
           <span>
@@ -120,7 +118,6 @@ export default function SettingsPage({ providerMode, providerLatency, onModeChan
           </span>
         </div>
 
-        {/* Latency slider */}
         <div className="field" style={{ marginBottom: 24 }}>
           <label className="field-label">
             <span className="field-label-icon"><Zap size={14} /></span>
@@ -159,7 +156,6 @@ export default function SettingsPage({ providerMode, providerLatency, onModeChan
         </button>
       </div>
 
-      {/* Scenarios card */}
       <div className="g-card">
         <div className="g-card-title" style={{ marginBottom: 16 }}>Test Scenarios</div>
         <div style={{ display: 'grid', gap: 14 }}>

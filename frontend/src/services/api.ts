@@ -4,6 +4,8 @@ import type {
   IdempotencyRecord,
   CreateChargePayload,
   ProviderMode,
+  Employee,
+  PayrollBatch,
 } from '../types';
 
 const BASE = '/api/v1';
@@ -25,7 +27,7 @@ async function apiFetch<T>(
       headers: { 'Content-Type': 'application/json', ...init?.headers },
       ...init,
     });
-    
+
     let json: any = null;
     try {
       json = await res.json();
@@ -95,6 +97,61 @@ export const api = {
       `/idempotency/${encodeURIComponent(key)}?customerId=${encodeURIComponent(customerId)}`,
     ),
 
+  listEmployees: (params?: {
+    search?: string;
+    department?: string;
+    status?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<ApiResult<Employee[]>> => {
+    const q = new URLSearchParams();
+    if (params?.search) q.append('search', params.search);
+    if (params?.department) q.append('department', params.department);
+    if (params?.status) q.append('status', params.status);
+    if (params?.limit) q.append('limit', String(params.limit));
+    if (params?.offset) q.append('offset', String(params.offset));
+    const qs = q.toString() ? `?${q.toString()}` : '';
+    return apiFetch<Employee[]>(`/employees${qs}`);
+  },
+
+  getEmployee: (id: string): Promise<ApiResult<Employee>> =>
+    apiFetch<Employee>(`/employees/${encodeURIComponent(id)}`),
+
+  createEmployee: (data: Partial<Employee>): Promise<ApiResult<Employee>> =>
+    apiFetch<Employee>('/employees', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updateEmployee: (id: string, data: Partial<Employee>): Promise<ApiResult<Employee>> =>
+    apiFetch<Employee>(`/employees/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
+  deleteEmployee: (id: string): Promise<ApiResult<Employee>> =>
+    apiFetch<Employee>(`/employees/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    }),
+
+  bulkImportEmployees: (employees: Partial<Employee>[]): Promise<ApiResult<{ imported: number; created: number; updated: number; errors: any[] }>> =>
+    apiFetch('/employees/bulk', {
+      method: 'POST',
+      body: JSON.stringify(employees),
+    }),
+
+  processPayroll: (payload: { title?: string; employeeIds?: string[] }): Promise<ApiResult<PayrollBatch>> =>
+    apiFetch<PayrollBatch>('/payroll/process', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  listPayrollBatches: (limit = 50): Promise<ApiResult<PayrollBatch[]>> =>
+    apiFetch<PayrollBatch[]>(`/payroll/batches?limit=${limit}`),
+
+  getPayrollBatch: (id: string): Promise<ApiResult<PayrollBatch>> =>
+    apiFetch<PayrollBatch>(`/payroll/batches/${encodeURIComponent(id)}`),
+
   setProviderMode: (
     modeOrObj: ProviderMode | { mode: ProviderMode; latencyMs?: number },
   ): Promise<ApiResult<{ mode: string }>> => {
@@ -123,3 +180,4 @@ export const api = {
   health: (): Promise<{ status: string }> =>
     fetch(`${BASE}/health`).then((r) => r.json() as Promise<{ status: string }>),
 };
+

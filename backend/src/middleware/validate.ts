@@ -2,10 +2,6 @@ import { Request, Response, NextFunction } from 'express';
 import { ZodSchema, ZodError } from 'zod';
 import { sendError } from '../utils/response';
 
-/**
- * Validates req.body against the provided Zod schema.
- * Returns 400 with structured field errors on failure.
- */
 export function validate(schema: ZodSchema) {
   return (req: Request, res: Response, next: NextFunction): void => {
     const result = schema.safeParse(req.body);

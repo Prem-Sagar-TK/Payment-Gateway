@@ -4,20 +4,13 @@ import { idempotencyKeySchema } from '../validators/charge.validator';
 import { MissingIdempotencyKeyError, ValidationError } from '../utils/errors';
 import { sendSuccess } from '../utils/response';
 
-/**
- * POST /api/v1/charges
- *
- * Requires:
- *   - Header: Idempotency-Key
- *   - Body:   validated by charge.validator middleware before this handler runs
- */
 export async function createCharge(
   req: Request,
   res: Response,
   next: NextFunction,
 ): Promise<void> {
   try {
-    // ── Validate Idempotency-Key header ───────────────────────────────────────
+
     const rawKey = req.headers['idempotency-key'] as string | undefined;
 
     if (!rawKey) {
@@ -39,17 +32,12 @@ export async function createCharge(
       req.requestId,
     );
 
-    // Use 200 for both new and replayed responses.
-    // The `idempotent` field in the body tells the client which case it is.
     sendSuccess(res, result, 200, req.requestId);
   } catch (err) {
     next(err);
   }
 }
 
-/**
- * GET /api/v1/charges/:id
- */
 export async function getCharge(
   req: Request,
   res: Response,
@@ -63,9 +51,6 @@ export async function getCharge(
   }
 }
 
-/**
- * GET /api/v1/payments
- */
 export async function listAllPayments(
   req: Request,
   res: Response,
@@ -82,9 +67,6 @@ export async function listAllPayments(
   }
 }
 
-/**
- * GET /api/v1/customers/:customerId/charges
- */
 export async function listCustomerCharges(
   req: Request,
   res: Response,

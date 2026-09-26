@@ -73,7 +73,7 @@ export default function SendMoneyPage({ onPaymentCreated }: Props) {
 
   return (
     <div>
-      {/* Page Header */}
+
       <div className="page-header">
         <div className="page-eyebrow">
           <CreditCard size={14} />
@@ -86,7 +86,6 @@ export default function SendMoneyPage({ onPaymentCreated }: Props) {
         </p>
       </div>
 
-      {/* How it works */}
       <div className="how-steps">
         <div className="how-step">
           <div className="how-step-num">1</div>
@@ -102,7 +101,6 @@ export default function SendMoneyPage({ onPaymentCreated }: Props) {
         </div>
       </div>
 
-      {/* Form Card */}
       <div className="g-card">
         <div className="g-card-header">
           <div className="g-card-icon green">
@@ -115,7 +113,7 @@ export default function SendMoneyPage({ onPaymentCreated }: Props) {
         </div>
 
         <div className="form-grid" style={{ gap: '20px' }}>
-          {/* Customer */}
+
           <div className="field">
             <label className="field-label">
               <span className="field-label-icon"><User size={14} /></span>
@@ -129,7 +127,6 @@ export default function SendMoneyPage({ onPaymentCreated }: Props) {
             <div className="field-hint">Identifier for the payer</div>
           </div>
 
-          {/* Amount */}
           <div className="field">
             <label className="field-label">
               <span className="field-label-icon"><DollarSign size={14} /></span>
@@ -144,7 +141,6 @@ export default function SendMoneyPage({ onPaymentCreated }: Props) {
             <div className="field-hint">In smallest currency unit (paise / cents)</div>
           </div>
 
-          {/* Currency */}
           <div className="field">
             <label className="field-label">
               <span className="field-label-icon"><Globe size={14} /></span>
@@ -155,7 +151,6 @@ export default function SendMoneyPage({ onPaymentCreated }: Props) {
             </select>
           </div>
 
-          {/* Description */}
           <div className="field">
             <label className="field-label">
               <span className="field-label-icon"><FileText size={14} /></span>
@@ -168,7 +163,6 @@ export default function SendMoneyPage({ onPaymentCreated }: Props) {
             />
           </div>
 
-          {/* Safety Key */}
           <div className="field span-2">
             <label className="field-label">
               <span className="field-label-icon"><KeyRound size={14} /></span>
@@ -209,7 +203,6 @@ export default function SendMoneyPage({ onPaymentCreated }: Props) {
           </div>
         </div>
 
-        {/* Submit button */}
         <div style={{ marginTop: '28px' }}>
           <button
             className="btn btn-primary btn-full btn-lg"
@@ -225,7 +218,6 @@ export default function SendMoneyPage({ onPaymentCreated }: Props) {
         </div>
       </div>
 
-      {/* Result */}
       {lastResult && (
         <div className={`result-block ${isReplay ? 'replay' : ''}`}>
           <div className={`result-badge ${isReplay ? 'replay' : 'success'}`}>

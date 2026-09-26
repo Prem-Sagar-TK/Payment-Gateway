@@ -4,7 +4,7 @@ import { logger } from './config/logger';
 import { prisma } from './config/prisma';
 
 async function main() {
-  // Verify database connectivity before accepting traffic
+
   try {
     await prisma.$connect();
     logger.info('Database connection established');
@@ -25,7 +25,6 @@ async function main() {
     });
   });
 
-  // ── Graceful shutdown ─────────────────────────────────────────────────────────
   const shutdown = async (signal: string) => {
     logger.info(`${signal} received — shutting down gracefully`);
     server.close(async () => {

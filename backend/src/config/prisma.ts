@@ -2,12 +2,10 @@ import { PrismaClient } from '@prisma/client';
 import { logger } from './logger';
 
 declare global {
-  // eslint-disable-next-line no-var
+
   var __prisma: PrismaClient | undefined;
 }
 
-// Prevent multiple instances during hot-reload in development.
-// In production, module caching already ensures a singleton.
 export const prisma: PrismaClient =
   global.__prisma ??
   new PrismaClient({
@@ -26,7 +24,7 @@ export const prisma: PrismaClient =
   });
 
 if (process.env['NODE_ENV'] === 'development') {
-  // Log slow queries only — never log full query params (may contain PII)
+
   prisma.$on('query' as never, (e: { duration: number; query: string }) => {
     if (e.duration > 100) {
       logger.debug('Slow query detected', { duration: e.duration, query: e.query });

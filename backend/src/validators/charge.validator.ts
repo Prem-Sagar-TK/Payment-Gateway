@@ -1,6 +1,5 @@
 import { z } from 'zod';
 
-// Supported ISO 4217 currency codes (expand as needed)
 const SUPPORTED_CURRENCIES = ['INR', 'USD', 'EUR', 'GBP', 'AED', 'SGD', 'AUD'] as const;
 
 export const createChargeSchema = z.object({

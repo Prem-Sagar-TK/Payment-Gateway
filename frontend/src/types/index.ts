@@ -24,13 +24,13 @@ export interface IdempotencyRecord {
   customerId: string;
   customer_id?: string;
   key: string;
-  idempotencyKey?: string;        // alias for 'key'
+  idempotencyKey?: string;
   requestHash: string;
   status: string;
   responseStatus?: number | null;
   responseCode?: number | null;
   paymentId?: string | null;
-  payment_id?: string | null;     // backend alias
+  payment_id?: string | null;
   replayCount: number;
   createdAt: string;
   created_at?: string;
@@ -83,3 +83,58 @@ export interface ConcurrentTestResult {
   totalDurationMs: number;
   avgLatencyMs: number;
 }
+
+export interface Employee {
+  id: string;
+  employeeId: string;
+  name: string;
+  email: string;
+  phone?: string | null;
+  department: string;
+  designation: string;
+  salary: number;
+  currency: string;
+  bankName?: string | null;
+  accountNumber?: string | null;
+  ifscCode?: string | null;
+  status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
+  paymentStatus: 'PAID' | 'PENDING' | 'FAILED' | 'PROCESSING';
+  lastPaymentDate?: string | null;
+  lastPaymentAmount?: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PayrollItem {
+  id: string;
+  batchId: string;
+  employeeId: string;
+  employeeName?: string;
+  employeeCode?: string;
+  department?: string;
+  amount: number;
+  currency: string;
+  status: 'SUCCEEDED' | 'FAILED' | 'PENDING';
+  paymentId?: string | null;
+  idempotencyKey?: string | null;
+  failureReason?: string | null;
+  createdAt: string;
+}
+
+export interface PayrollBatch {
+  id: string;
+  batchNumber: string;
+  title: string;
+  month?: string | null;
+  totalEmployees: number;
+  totalAmount: number;
+  currency: string;
+  status: 'DRAFT' | 'PROCESSING' | 'COMPLETED' | 'PARTIAL' | 'FAILED';
+  successCount: number;
+  failedCount: number;
+  processedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  items?: PayrollItem[];
+}
+

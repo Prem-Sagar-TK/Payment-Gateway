@@ -7,26 +7,8 @@ import { hashRequest } from '../utils/hash';
 import { NotFoundError } from '../utils/errors';
 import { CreateChargeInput, PaymentResponse, RefundResponse } from '../types';
 
-/**
- * PaymentService
- *
- * Orchestrates the full charge lifecycle:
- *
- *  1. Hash the request payload.
- *  2. Attempt to claim the idempotency key (delegates to IdempotencyService).
- *  3. If this is a replay → return stored response immediately.
- *  4. If this is the first request:
- *       a. Create a PENDING payment record.
- *       b. Call the mock payment provider.
- *       c. Update payment + idempotency record with the result.
- *       d. Return the final payment response.
- */
 export class PaymentService {
-  /**
-   * createCharge
-   *
-   * Entry point for POST /api/v1/charges.
-   */
+
   async createCharge(
     input: CreateChargeInput,
     requestId: string,
@@ -43,16 +25,12 @@ export class PaymentService {
       currency,
     });
 
-    // ── Step 1: Claim the idempotency key ─────────────────────────────────────
-    // This is the atomic race: only one caller wins the INSERT.
-    // May throw RequestMismatchError or PaymentInProgressError.
     const { isNewRequest, record } = await idempotencyService.claimKey({
       customerId,
       key: idempotencyKey,
       requestHash,
     });
 
-    // ── Step 2: Replay path ───────────────────────────────────────────────────
     if (!isNewRequest) {
       logger.info('Returning idempotent replay', {
         requestId,
@@ -62,17 +40,14 @@ export class PaymentService {
         status: record.status,
       });
 
-      // responseBody was stored as JSON — cast it back to PaymentResponse shape
       const stored = record.responseBody as unknown as PaymentResponse;
       return { ...stored, idempotent: true };
     }
 
-    // ── Step 3: First-time processing ─────────────────────────────────────────
     let payment: Payment | undefined;
 
     try {
-      // Create a PENDING payment row immediately.
-      // This gives us a payment ID to reference in the idempotency record.
+
       payment = await prisma.payment.create({
         data: {
           customerId,
@@ -89,7 +64,6 @@ export class PaymentService {
         paymentId: payment.id,
       });
 
-      // ── Step 4: Call the payment provider ──────────────────────────────────
       const providerResult = await mockProvider.createCharge({
         amount,
         currency,
@@ -97,7 +71,6 @@ export class PaymentService {
         description,
       });
 
-      // ── Step 5: Update payment record with provider result ─────────────────
       const finalStatus =
         providerResult.status === 'succeeded' ? PaymentStatus.SUCCEEDED : PaymentStatus.FAILED;
 
@@ -110,7 +83,6 @@ export class PaymentService {
         },
       });
 
-      // ── Step 6: Build the response ─────────────────────────────────────────
       const response: PaymentResponse = {
         id: payment.id,
         amount: payment.amount,
@@ -125,7 +97,6 @@ export class PaymentService {
         idempotent: false,
       };
 
-      // ── Step 7: Persist the result in the idempotency record ───────────────
       if (finalStatus === PaymentStatus.SUCCEEDED) {
         await idempotencyService.markSucceeded({
           customerId,
@@ -153,9 +124,7 @@ export class PaymentService {
       return response;
 
     } catch (err) {
-      // ── Error path: mark idempotency record as FAILED ─────────────────────
-      // This ensures subsequent retries receive a deterministic FAILED response
-      // rather than hanging in PROCESSING forever.
+
       logger.error('Charge processing error', {
         requestId,
         customerId,
@@ -177,7 +146,6 @@ export class PaymentService {
         idempotent: false,
       };
 
-      // Best-effort: mark idempotency record as failed so retries get a replay
       await idempotencyService
         .markFailed({
           customerId,
@@ -188,7 +156,6 @@ export class PaymentService {
           logger.error('Failed to mark idempotency record as FAILED', { error: markErr }),
         );
 
-      // Also update payment status if the record was created
       if (payment?.id) {
         await prisma.payment
           .update({
@@ -207,22 +174,12 @@ export class PaymentService {
     }
   }
 
-  /**
-   * getPaymentById
-   *
-   * Fetches a payment by its internal ID.
-   */
   async getPaymentById(paymentId: string): Promise<PaymentResponse> {
     const payment = await prisma.payment.findUnique({ where: { id: paymentId } });
     if (!payment) throw new NotFoundError('Payment', paymentId);
     return this.toResponse(payment);
   }
 
-  /**
-   * listAllPayments
-   *
-   * Lists all payments across all customers, newest first.
-   */
   async listAllPayments(
     limit = 50,
     offset = 0,
@@ -239,11 +196,6 @@ export class PaymentService {
     return { payments: payments.map((p) => this.toResponse(p)), total };
   }
 
-  /**
-   * getPaymentsByCustomer
-   *
-   * Lists all payments for a customer, newest first.
-   */
   async getPaymentsByCustomer(
     customerId: string,
     limit = 50,
@@ -262,11 +214,6 @@ export class PaymentService {
     return { payments: payments.map((p) => this.toResponse(p)), total };
   }
 
-  /**
-   * createRefund
-   *
-   * Issues a mock refund for a succeeded payment.
-   */
   async createRefund(paymentId: string, requestId: string): Promise<RefundResponse> {
     const payment = await prisma.payment.findUnique({ where: { id: paymentId } });
     if (!payment) throw new NotFoundError('Payment', paymentId);

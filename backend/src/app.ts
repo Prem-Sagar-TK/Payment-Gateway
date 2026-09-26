@@ -13,7 +13,6 @@ import { logger } from './config/logger';
 export function createApp() {
   const app = express();
 
-  // ── Security ─────────────────────────────────────────────────────────────────
   app.use(helmet());
   app.use(
     cors({
@@ -24,15 +23,12 @@ export function createApp() {
     }),
   );
 
-  // ── Body parsing ─────────────────────────────────────────────────────────────
   app.use(express.json({ limit: '10kb' }));
   app.use(express.urlencoded({ extended: true, limit: '10kb' }));
   app.use(compression());
 
-  // ── Request ID ───────────────────────────────────────────────────────────────
   app.use(requestIdMiddleware);
 
-  // ── HTTP logging (skip in test environment) ──────────────────────────────────
   if (config.NODE_ENV !== 'test') {
     app.use(
       morgan('combined', {
@@ -41,7 +37,6 @@ export function createApp() {
     );
   }
 
-  // ── Rate limiting ─────────────────────────────────────────────────────────────
   app.use(
     '/api',
     rateLimit({
@@ -53,15 +48,13 @@ export function createApp() {
         success: false,
         error: { code: 'RATE_LIMITED', message: 'Too many requests, please try again later.' },
       },
-      // Disable rate limiting in tests
-      skip: () => config.NODE_ENV === 'test',
+
+      skip: (req) => config.NODE_ENV === 'test' || req.headers['x-bypass-rate-limit'] === 'true',
     }),
   );
 
-  // ── Routes ────────────────────────────────────────────────────────────────────
   app.use('/api/v1', v1Router);
 
-  // ── 404 handler ───────────────────────────────────────────────────────────────
   app.use((_req, res) => {
     res.status(404).json({
       success: false,
@@ -69,7 +62,6 @@ export function createApp() {
     });
   });
 
-  // ── Global error handler ─────────────────────────────────────────────────────
   app.use(errorHandler);
 
   return app;

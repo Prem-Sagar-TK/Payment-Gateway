@@ -18,7 +18,7 @@ export const ConcurrentTest: React.FC<ConcurrentTestProps> = ({ onTestComplete }
   const [amount, setAmount] = useState<number>(4999);
   const [currency, setCurrency] = useState<string>('INR');
   const [customerId, setCustomerId] = useState<string>('cus_test_123');
-  
+
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [results, setResults] = useState<ConcurrencyResult[]>([]);
   const [stats, setStats] = useState<ConcurrencyStats | null>(null);
@@ -83,7 +83,6 @@ export const ConcurrentTest: React.FC<ConcurrentTestProps> = ({ onTestComplete }
       const allResults = await Promise.all(requests);
       const totalDuration = Math.round(performance.now() - testStartTime);
 
-      // Compute statistics
       let created = 0;
       let replayed = 0;
       let conflict = 0;
@@ -156,7 +155,6 @@ export const ConcurrentTest: React.FC<ConcurrentTestProps> = ({ onTestComplete }
           </div>
         </div>
 
-        {/* Controls Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
           <div>
             <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
@@ -249,14 +247,12 @@ export const ConcurrentTest: React.FC<ConcurrentTestProps> = ({ onTestComplete }
         </div>
       </div>
 
-      {/* Visualizer Grid */}
       <ConcurrencyViz
         results={results}
         isRunning={isRunning}
         totalRequests={concurrencyLevel}
       />
 
-      {/* Stats Cards */}
       {stats && (
         <div className="space-y-4">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -286,7 +282,6 @@ export const ConcurrentTest: React.FC<ConcurrentTestProps> = ({ onTestComplete }
             </div>
           </div>
 
-          {/* Idempotency Integrity Banner */}
           <div className={`p-4 rounded-xl border flex items-start gap-3.5 ${
             sameKey
               ? stats.uniquePaymentIds === 1

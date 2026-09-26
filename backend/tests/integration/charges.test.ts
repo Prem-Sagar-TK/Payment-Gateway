@@ -1,13 +1,3 @@
-/**
- * Integration tests for POST /api/v1/charges
- *
- * Tests all idempotency cases against a real PostgreSQL database.
- * Run with: npm run test:integration
- *
- * Prerequisites: PostgreSQL running, test DB migrated (done in globalSetup.ts)
- */
-
-// Set env BEFORE any module imports
 process.env['NODE_ENV'] = 'test';
 process.env['DATABASE_URL'] =
   process.env['TEST_DATABASE_URL'] ??
@@ -41,7 +31,6 @@ afterAll(async () => {
   await testPrisma.$disconnect();
 });
 
-// ─── Test 1: Missing Idempotency-Key ─────────────────────────────────────────
 describe('Missing Idempotency-Key', () => {
   it('should return 400 when Idempotency-Key header is absent', async () => {
     const res = await request(app)
@@ -53,7 +42,6 @@ describe('Missing Idempotency-Key', () => {
   });
 });
 
-// ─── Test 2: Input Validation ─────────────────────────────────────────────────
 describe('Input Validation', () => {
   it('should return 400 for invalid amount (float)', async () => {
     const res = await request(app)
@@ -75,7 +63,6 @@ describe('Input Validation', () => {
   });
 });
 
-// ─── Test 3: First Payment Request ────────────────────────────────────────────
 describe('First Payment Request', () => {
   it('should create a payment and return idempotent: false', async () => {
     const res = await request(app)
@@ -90,7 +77,6 @@ describe('First Payment Request', () => {
     expect(res.body.data.id).toBeDefined();
     expect(res.body.data.providerReference).toMatch(/^ch_mock_/);
 
-    // Verify exactly one payment in DB
     const payments = await testPrisma.payment.findMany({
       where: { customerId: defaultPayload.customerId },
     });
@@ -98,7 +84,6 @@ describe('First Payment Request', () => {
   });
 });
 
-// ─── Test 4: Idempotent Replay ────────────────────────────────────────────────
 describe('Idempotent Replay', () => {
   it('should return the same payment on second request', async () => {
     const key = 'test-replay-key';
@@ -121,7 +106,6 @@ describe('Idempotent Replay', () => {
     expect(second.body.data.id).toBe(first.body.data.id);
     expect(second.body.data.providerReference).toBe(first.body.data.providerReference);
 
-    // Still exactly one payment in DB
     const payments = await testPrisma.payment.findMany({
       where: { customerId: defaultPayload.customerId },
     });
@@ -157,12 +141,10 @@ describe('Idempotent Replay', () => {
   });
 });
 
-// ─── Test 5: Same Key + Different Body → 409 ──────────────────────────────────
 describe('Request Mismatch', () => {
   it('should return 409 when idempotency key is reused with a different amount', async () => {
     const key = 'test-mismatch-key';
 
-    // First request
     const first = await request(app)
       .post(`${BASE_URL}/charges`)
       .set('Idempotency-Key', key)
@@ -170,7 +152,6 @@ describe('Request Mismatch', () => {
 
     expect(first.status).toBe(200);
 
-    // Second request with different amount
     const second = await request(app)
       .post(`${BASE_URL}/charges`)
       .set('Idempotency-Key', key)
@@ -198,7 +179,6 @@ describe('Request Mismatch', () => {
   });
 });
 
-// ─── Test 6: Payment Retrieval ────────────────────────────────────────────────
 describe('Payment Retrieval', () => {
   it('should retrieve payment by ID', async () => {
     const key = 'test-retrieval-key';
@@ -223,7 +203,7 @@ describe('Payment Retrieval', () => {
   });
 
   it('should list payments by customer', async () => {
-    // Create 3 payments with different keys
+
     for (let i = 0; i < 3; i++) {
       await request(app)
         .post(`${BASE_URL}/charges`)
@@ -241,7 +221,6 @@ describe('Payment Retrieval', () => {
   });
 });
 
-// ─── Test 7: Refund ───────────────────────────────────────────────────────────
 describe('Refund', () => {
   it('should issue a refund for a succeeded payment', async () => {
     const created = await request(app)
@@ -259,7 +238,6 @@ describe('Refund', () => {
   });
 });
 
-// ─── Test 8: Idempotency Record Inspection ────────────────────────────────────
 describe('Idempotency Record', () => {
   it('should be inspectable via the idempotency endpoint', async () => {
     const key = 'test-inspect-key';
@@ -280,7 +258,6 @@ describe('Idempotency Record', () => {
   });
 });
 
-// ─── Test 9: Health Check ─────────────────────────────────────────────────────
 describe('Health Check', () => {
   it('should return ok status', async () => {
     const res = await request(app).get(`${BASE_URL}/health`);

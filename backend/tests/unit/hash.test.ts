@@ -1,9 +1,3 @@
-/**
- * Unit tests for the request hash utility.
- * These tests don't require a database connection.
- */
-
-// Set env before imports
 process.env['NODE_ENV'] = 'test';
 process.env['DATABASE_URL'] =
   process.env['TEST_DATABASE_URL'] ??

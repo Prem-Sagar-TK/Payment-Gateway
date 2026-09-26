@@ -59,7 +59,6 @@ export default function KeysPage({ records, loading, onRefresh }: Props) {
         </div>
       </div>
 
-      {/* How keys work */}
       <div className="g-card" style={{ background: 'var(--green-bg)', borderColor: 'var(--green-border)', marginBottom: 24 }}>
         <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
           <div className="g-card-icon green" style={{ width: 36, height: 36 }}>
@@ -79,7 +78,6 @@ export default function KeysPage({ records, loading, onRefresh }: Props) {
         </div>
       </div>
 
-      {/* Stats */}
       <div className="stats-row" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: 24 }}>
         <div className="stat-tile">
           <div className="stat-tile-icon"><KeyRound size={18} /></div>
@@ -100,7 +98,6 @@ export default function KeysPage({ records, loading, onRefresh }: Props) {
         </div>
       </div>
 
-      {/* Table */}
       {records.length === 0 ? (
         <div className="g-card">
           <div className="empty-state">

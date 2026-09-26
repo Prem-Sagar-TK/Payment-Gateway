@@ -57,7 +57,6 @@ async function main() {
   process.on('SIGINT', shutdown);
   process.on('SIGTERM', shutdown);
 
-  // Keep alive indefinitely
   setInterval(() => {}, 1000 * 60 * 60);
 }
 

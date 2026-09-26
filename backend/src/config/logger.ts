@@ -23,7 +23,7 @@ export const logger = winston.createLogger({
   level: config.LOG_LEVEL,
   format: config.NODE_ENV === 'production' ? prodFormat : devFormat,
   transports: [new winston.transports.Console()],
-  // Prevent logging sensitive payment credentials
+
   silent: false,
 });
 

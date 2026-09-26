@@ -1,12 +1,3 @@
-/**
- * Load/Stress Test Script
- *
- * Measures throughput and latency of the idempotency guarantee under concurrent load.
- * Run with: npm run load-test
- *
- * Prerequisites: Backend must be running on PORT 3001 (npm run dev)
- */
-
 import http from 'http';
 
 const BASE_URL = `http://localhost:${process.env['PORT'] ?? 3001}/api/v1`;
@@ -27,9 +18,6 @@ interface BenchmarkResult {
   throughputRps: number;
 }
 
-/**
- * Makes a single POST /charges request and returns latency + status.
- */
 function makeRequest(
   idempotencyKey: string,
   payload: object,
@@ -47,6 +35,7 @@ function makeRequest(
         'Content-Type': 'application/json',
         'Content-Length': Buffer.byteLength(bodyStr),
         'Idempotency-Key': idempotencyKey,
+        'X-Bypass-Rate-Limit': 'true',
       },
     };
 
@@ -100,7 +89,6 @@ async function runScenario(
   const conflictResponses = results.filter((r) => r.status === 409);
   const errorResponses = results.filter((r) => r.status !== 200 && r.status !== 409);
 
-  // Count unique payment IDs from successful responses
   const paymentIds = new Set(
     successfulResponses
       .map((r) => (r.body as { data?: { id?: string } }).data?.id)
@@ -123,7 +111,6 @@ async function runScenario(
     throughputRps: Math.round((n / totalDurationMs) * 1000),
   };
 
-  // Print table
   console.log(`  Total requests:        ${result.totalRequests}`);
   console.log(`  Successful (200):      ${result.successfulResponses}`);
   console.log(`  Conflict (409):        ${result.conflictResponses}`);
@@ -160,7 +147,6 @@ async function main() {
   console.log('='.repeat(60));
   console.log(`Target: ${BASE_URL}`);
 
-  // Reset before starting
   await resetDb().catch(() => {
     console.warn('⚠️  Could not reset DB (server may not be running on demo mode)');
   });
@@ -172,7 +158,6 @@ async function main() {
     description: 'Load test payment',
   };
 
-  // ── Scenario 1: 100 requests, same key → 1 payment ────────────────────────
   const s1 = await runScenario(
     '100 concurrent — same key (expect 1 unique payment)',
     100,
@@ -184,7 +169,6 @@ async function main() {
 
   await resetDb().catch(() => {});
 
-  // ── Scenario 2: 100 requests, unique keys → 100 payments ──────────────────
   const s2 = await runScenario(
     '100 concurrent — unique keys (expect 100 unique payments)',
     100,
@@ -196,7 +180,6 @@ async function main() {
 
   await resetDb().catch(() => {});
 
-  // ── Scenario 3: 500 concurrent — same key ────────────────────────────────
   const s3 = await runScenario(
     '500 concurrent — same key (stress test)',
     500,

@@ -6,10 +6,6 @@ import { providerModeSchema } from '../validators/charge.validator';
 import { sendSuccess, sendError } from '../utils/response';
 import { logger } from '../config/logger';
 
-/**
- * All demo endpoints are DEVELOPMENT ONLY.
- * They are registered only when NODE_ENV !== 'production'.
- */
 function requireDev(req: Request, res: Response): boolean {
   if (config.NODE_ENV === 'production') {
     sendError(res, 403, 'FORBIDDEN', 'Demo endpoints are not available in production', undefined, req.requestId);
@@ -18,12 +14,6 @@ function requireDev(req: Request, res: Response): boolean {
   return true;
 }
 
-/**
- * POST /api/v1/demo/reset
- *
- * Deletes all idempotency records and payments. Useful for resetting
- * the dashboard between demo runs.
- */
 export async function demoReset(
   req: Request,
   res: Response,
@@ -40,13 +30,6 @@ export async function demoReset(
   }
 }
 
-/**
- * POST /api/v1/demo/provider-mode
- *
- * Body: { "mode": "success" | "failure" | "timeout" | "random" }
- *
- * Sets the mock payment provider mode at runtime.
- */
 export async function setProviderMode(
   req: Request,
   res: Response,
@@ -80,11 +63,6 @@ export async function setProviderMode(
   }
 }
 
-/**
- * GET /api/v1/demo/provider-mode
- *
- * Returns the current mock provider mode.
- */
 export async function getProviderMode(
   req: Request,
   res: Response,

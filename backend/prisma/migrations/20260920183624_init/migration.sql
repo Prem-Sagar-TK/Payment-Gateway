@@ -1,10 +1,7 @@
--- CreateEnum
 CREATE TYPE "IdempotencyStatus" AS ENUM ('PROCESSING', 'SUCCEEDED', 'FAILED');
 
--- CreateEnum
 CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'SUCCEEDED', 'FAILED');
 
--- CreateTable
 CREATE TABLE "idempotency_records" (
     "id" TEXT NOT NULL,
     "customerId" TEXT NOT NULL,
@@ -21,7 +18,6 @@ CREATE TABLE "idempotency_records" (
     CONSTRAINT "idempotency_records_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
 CREATE TABLE "payments" (
     "id" TEXT NOT NULL,
     "customerId" TEXT NOT NULL,
@@ -38,20 +34,14 @@ CREATE TABLE "payments" (
     CONSTRAINT "payments_pkey" PRIMARY KEY ("id")
 );
 
--- CreateIndex
 CREATE INDEX "idempotency_records_customerId_idx" ON "idempotency_records"("customerId");
 
--- CreateIndex
 CREATE INDEX "idempotency_records_key_idx" ON "idempotency_records"("key");
 
--- CreateIndex
 CREATE UNIQUE INDEX "idempotency_records_customerId_key_key" ON "idempotency_records"("customerId", "key");
 
--- CreateIndex
 CREATE INDEX "payments_customerId_idx" ON "payments"("customerId");
 
--- CreateIndex
 CREATE INDEX "payments_idempotencyKey_idx" ON "payments"("idempotencyKey");
 
--- AddForeignKey
 ALTER TABLE "idempotency_records" ADD CONSTRAINT "idempotency_records_paymentId_fkey" FOREIGN KEY ("paymentId") REFERENCES "payments"("id") ON DELETE SET NULL ON UPDATE CASCADE;

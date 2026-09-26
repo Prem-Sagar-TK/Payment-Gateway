@@ -13,7 +13,7 @@ async function globalTeardown() {
   });
 
   try {
-    // Clean up test data
+
     await prisma.idempotencyRecord.deleteMany();
     await prisma.payment.deleteMany();
     console.log('✅ Test database cleaned up');

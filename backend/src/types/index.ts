@@ -19,7 +19,7 @@ export interface PaymentResponse {
   failureReason?: string | null;
   createdAt: Date;
   updatedAt: Date;
-  /** true when this response was replayed from a previous idempotent request */
+
   idempotent: boolean;
 }
 
@@ -58,7 +58,59 @@ export interface ProviderRefundResult {
   status: 'succeeded' | 'failed';
 }
 
-// ─── Express Request augmentation ─────────────────────────────────────────────
+export interface EmployeeInput {
+  employeeId?: string;
+  name: string;
+  email: string;
+  phone?: string;
+  department: string;
+  designation: string;
+  salary: number;
+  currency?: string;
+  bankName?: string;
+  accountNumber?: string;
+  ifscCode?: string;
+  status?: string;
+}
+
+export interface ProcessPayrollInput {
+  title?: string;
+  employeeIds: string[];
+}
+
+export interface PayrollBatchResponse {
+  id: string;
+  batchNumber: string;
+  title: string;
+  month?: string | null;
+  totalEmployees: number;
+  totalAmount: number;
+  currency: string;
+  status: string;
+  successCount: number;
+  failedCount: number;
+  processedAt?: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  items?: PayrollItemResponse[];
+}
+
+export interface PayrollItemResponse {
+  id: string;
+  batchId: string;
+  employeeId: string;
+  employeeName?: string;
+  employeeCode?: string;
+  department?: string;
+  amount: number;
+  currency: string;
+  status: string;
+  paymentId?: string | null;
+  idempotencyKey?: string | null;
+  failureReason?: string | null;
+  createdAt: Date;
+}
+
 declare global {
   namespace Express {
     interface Request {
@@ -66,3 +118,4 @@ declare global {
     }
   }
 }
+

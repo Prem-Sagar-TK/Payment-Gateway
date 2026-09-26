@@ -3,11 +3,6 @@ import { idempotencyService } from '../services/idempotency.service';
 import { NotFoundError } from '../utils/errors';
 import { sendSuccess } from '../utils/response';
 
-/**
- * GET /api/v1/idempotency/records
- *
- * Lists all idempotency records in the database.
- */
 export async function listAllIdempotencyRecords(
   req: Request,
   res: Response,
@@ -24,14 +19,6 @@ export async function listAllIdempotencyRecords(
   }
 }
 
-/**
- * GET /api/v1/idempotency/:key
- *
- * Returns the current state of an idempotency record for a given
- * (customerId, key) pair. Useful for debugging and the demo dashboard.
- *
- * customerId must be provided as a query param: ?customerId=cus_123
- */
 export async function getIdempotencyRecord(
   req: Request,
   res: Response,

@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import {
-  CreditCard, RefreshCw, Zap, History, KeyRound,
-  Trash2, ShieldCheck, Settings2
+  LayoutDashboard, Users, FileSpreadsheet, CreditCard, RefreshCw,
+  Zap, History, KeyRound, Settings2, Trash2, ShieldCheck, Menu, X
 } from 'lucide-react';
 import { api } from './services/api';
-import type { Payment, IdempotencyRecord } from './types';
+import type { Payment, IdempotencyRecord, Employee, PayrollBatch } from './types';
 
-// ── Pages ─────────────────────────────────────────────────────────────────────
+import DashboardPage from './pages/DashboardPage';
+import EmployeesPage from './pages/EmployeesPage';
+import PayrollPage from './pages/PayrollPage';
 import SendMoneyPage from './pages/SendMoneyPage';
 import RetryPage from './pages/RetryPage';
 import StressTestPage from './pages/StressTestPage';
@@ -15,69 +17,98 @@ import PaymentHistoryPage from './pages/PaymentHistoryPage';
 import KeysPage from './pages/KeysPage';
 import SettingsPage from './pages/SettingsPage';
 
-type Page = 'send' | 'retry' | 'stress' | 'history' | 'keys' | 'settings';
+export type Page =
+  | 'dashboard'
+  | 'employees'
+  | 'payroll'
+  | 'send'
+  | 'retry'
+  | 'stress'
+  | 'history'
+  | 'keys'
+  | 'settings';
 
 interface NavItem {
   id: Page;
   icon: React.ReactNode;
   label: string;
-  sublabel: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
   {
+    id: 'dashboard',
+    icon: <LayoutDashboard size={15} />,
+    label: 'Dashboard',
+  },
+  {
+    id: 'employees',
+    icon: <Users size={15} />,
+    label: 'Employees',
+  },
+  {
+    id: 'payroll',
+    icon: <FileSpreadsheet size={15} />,
+    label: 'Payroll & Bulk Pay',
+  },
+  {
     id: 'send',
-    icon: <CreditCard size={17} />,
+    icon: <CreditCard size={15} />,
     label: 'Send Money',
-    sublabel: 'Create a payment',
   },
   {
     id: 'retry',
-    icon: <RefreshCw size={17} />,
+    icon: <RefreshCw size={15} />,
     label: 'Try Again',
-    sublabel: 'Resend same payment',
   },
   {
     id: 'stress',
-    icon: <Zap size={17} />,
+    icon: <Zap size={15} />,
     label: 'Batch Test',
-    sublabel: 'Send many at once',
   },
   {
     id: 'history',
-    icon: <History size={17} />,
+    icon: <History size={15} />,
     label: 'Payment History',
-    sublabel: 'All past payments',
   },
   {
     id: 'keys',
-    icon: <KeyRound size={17} />,
+    icon: <KeyRound size={15} />,
     label: 'Safety Keys',
-    sublabel: 'Duplicate protection',
   },
   {
     id: 'settings',
-    icon: <Settings2 size={17} />,
+    icon: <Settings2 size={15} />,
     label: 'Settings',
-    sublabel: 'Provider & mode',
   },
 ];
 
 export const App: React.FC = () => {
-  const [activePage, setActivePage] = useState<Page>('send');
+  const [activePage, setActivePage] = useState<Page>('dashboard');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Core Gateway & Company State
   const [payments, setPayments] = useState<Payment[]>([]);
   const [records, setRecords] = useState<IdempotencyRecord[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [batches, setBatches] = useState<PayrollBatch[]>([]);
   const [loading, setLoading] = useState(false);
   const [apiOnline, setApiOnline] = useState(true);
+
+  // Settings & Navigation Context
   const [providerMode, setProviderMode] = useState<'success' | 'failure' | 'timeout' | 'random'>('success');
   const [providerLatency, setProviderLatency] = useState(50);
+  const [payrollInitialSelectedIds, setPayrollInitialSelectedIds] = useState<string[]>([]);
+  const [selectedPaymentToRetry, setSelectedPaymentToRetry] = useState<Payment | null>(null);
+  const [historyDefaultTab, setHistoryDefaultTab] = useState<'payments' | 'batches'>('payments');
 
-  const fetchLedger = useCallback(async () => {
+  const fetchAllData = useCallback(async () => {
     setLoading(true);
     try {
-      const [paymentsRes, recordsRes] = await Promise.all([
+      const [paymentsRes, recordsRes, employeesRes, batchesRes] = await Promise.all([
         api.listPayments(50),
         api.listIdempotencyRecords(50),
+        api.listEmployees({ limit: 200 }),
+        api.listPayrollBatches(50),
       ]);
 
       if (paymentsRes.success && paymentsRes.data?.data) {
@@ -85,6 +116,12 @@ export const App: React.FC = () => {
       }
       if (recordsRes.success && recordsRes.data?.data) {
         setRecords(recordsRes.data.data as IdempotencyRecord[]);
+      }
+      if (employeesRes.success && employeesRes.data?.data) {
+        setEmployees(employeesRes.data.data as Employee[]);
+      }
+      if (batchesRes.success && batchesRes.data?.data) {
+        setBatches(batchesRes.data.data as PayrollBatch[]);
       }
       setApiOnline(true);
     } catch {
@@ -95,33 +132,100 @@ export const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    fetchLedger();
+    fetchAllData();
     api.health().then(() => setApiOnline(true)).catch(() => setApiOnline(false));
-  }, [fetchLedger]);
+  }, [fetchAllData]);
 
   const handleReset = async () => {
-    if (!window.confirm('This will delete all payments and safety keys. Are you sure?')) return;
+    if (!window.confirm('This will delete all payments, safety keys, and payroll batches. Are you sure?')) return;
     try {
       await api.resetDemo();
-      toast.success('All data cleared successfully');
-      fetchLedger();
+      toast.success('All demo transactions cleared successfully');
+      fetchAllData();
     } catch (err: any) {
       toast.error(`Failed to reset: ${err.message}`);
     }
   };
 
+  const handleNavigate = (page: string, params?: any) => {
+    if (page === 'payroll' && params?.selectedEmployeeIds) {
+      setPayrollInitialSelectedIds(params.selectedEmployeeIds);
+    }
+    if (page === 'retry' && params?.payment) {
+      setSelectedPaymentToRetry(params.payment);
+    }
+    if (page === 'history' && params?.tab) {
+      setHistoryDefaultTab(params.tab);
+    }
+    setActivePage(page as Page);
+    setMobileMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const renderPage = () => {
     switch (activePage) {
+      case 'dashboard':
+        return (
+          <DashboardPage
+            employees={employees}
+            payments={payments}
+            batches={batches}
+            loading={loading}
+            onNavigate={handleNavigate}
+            onRefresh={fetchAllData}
+          />
+        );
+      case 'employees':
+        return (
+          <EmployeesPage
+            employees={employees}
+            loading={loading}
+            onRefresh={fetchAllData}
+            onInitiatePayroll={(selectedIds) => {
+              setPayrollInitialSelectedIds(selectedIds);
+              setActivePage('payroll');
+            }}
+          />
+        );
+      case 'payroll':
+        return (
+          <PayrollPage
+            employees={employees}
+            initialSelectedIds={payrollInitialSelectedIds}
+            onPayrollComplete={fetchAllData}
+            onNavigateHistory={() => {
+              setHistoryDefaultTab('batches');
+              setActivePage('history');
+            }}
+          />
+        );
       case 'send':
-        return <SendMoneyPage onPaymentCreated={fetchLedger} />;
+        return <SendMoneyPage onPaymentCreated={fetchAllData} />;
       case 'retry':
-        return <RetryPage onPaymentCreated={fetchLedger} />;
+        return (
+          <RetryPage
+            onPaymentCreated={fetchAllData}
+            selectedPaymentToRetry={selectedPaymentToRetry}
+          />
+        );
       case 'stress':
-        return <StressTestPage onTestComplete={fetchLedger} />;
+        return <StressTestPage onTestComplete={fetchAllData} />;
       case 'history':
-        return <PaymentHistoryPage payments={payments} loading={loading} onRefresh={fetchLedger} />;
+        return (
+          <PaymentHistoryPage
+            payments={payments}
+            batches={batches}
+            loading={loading}
+            onRefresh={fetchAllData}
+            defaultTab={historyDefaultTab}
+            onRetryPayment={(payment) => {
+              setSelectedPaymentToRetry(payment);
+              setActivePage('retry');
+            }}
+          />
+        );
       case 'keys':
-        return <KeysPage records={records} loading={loading} onRefresh={fetchLedger} />;
+        return <KeysPage records={records} loading={loading} onRefresh={fetchAllData} />;
       case 'settings':
         return (
           <SettingsPage
@@ -169,84 +273,72 @@ export const App: React.FC = () => {
       />
 
       <div className="app-shell">
-        {/* ── Sidebar ── */}
-        <aside className="sidebar">
-          {/* Brand */}
-          <div className="sidebar-brand">
-            <div className="brand-icon">
-              <ShieldCheck size={22} />
+        {/* Top Navigation Bar */}
+        <header className="top-nav">
+          <div className="top-nav-left">
+            <div className="top-nav-brand" onClick={() => handleNavigate('dashboard')}>
+              <div className="brand-icon">
+                <ShieldCheck size={20} />
+              </div>
+              <div>
+                <div className="brand-name">PayGate</div>
+                <div className="brand-tagline">Idempotent Enterprise Gateway</div>
+              </div>
             </div>
-            <div className="brand-text">
-              <div className="brand-name">PayGate</div>
-              <div className="brand-tagline">Idempotent Gateway</div>
+
+            <div className={`status-pill ${apiOnline ? '' : 'offline'}`}>
+              <span className="status-dot" />
+              {apiOnline ? 'System Online' : 'Offline'}
             </div>
           </div>
 
-          {/* Online status */}
-          <div className={`status-pill ${apiOnline ? '' : 'offline'}`}>
-            <span className="status-dot" />
-            {apiOnline ? 'System Online' : 'System Offline'}
-          </div>
+          <nav className="top-nav-links">
+            {NAV_ITEMS.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={`top-nav-item ${activePage === item.id ? 'active' : ''}`}
+                onClick={() => handleNavigate(item.id)}
+              >
+                {item.icon}
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </nav>
 
-          {/* Navigation */}
-          <div className="nav-section-label">Actions</div>
+          <div className="top-nav-right">
+            <button className="reset-btn" onClick={handleReset} title="Clear all payments and keys">
+              <Trash2 size={13} />
+              <span>Clear Data</span>
+            </button>
 
-          {NAV_ITEMS.slice(0, 3).map((item) => (
-            <div
-              key={item.id}
-              className={`nav-item ${activePage === item.id ? 'active' : ''}`}
-              onClick={() => setActivePage(item.id)}
+            <button
+              className="mobile-menu-btn"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              type="button"
+              aria-label="Toggle navigation menu"
             >
-              <div className="nav-icon">{item.icon}</div>
-              <div className="nav-text">
-                <span className="nav-label">{item.label}</span>
-                <span className="nav-sublabel">{item.sublabel}</span>
-              </div>
-            </div>
-          ))}
-
-          <div className="nav-section-label">Records</div>
-
-          {NAV_ITEMS.slice(3, 5).map((item) => (
-            <div
-              key={item.id}
-              className={`nav-item ${activePage === item.id ? 'active' : ''}`}
-              onClick={() => setActivePage(item.id)}
-            >
-              <div className="nav-icon">{item.icon}</div>
-              <div className="nav-text">
-                <span className="nav-label">{item.label}</span>
-                <span className="nav-sublabel">{item.sublabel}</span>
-              </div>
-            </div>
-          ))}
-
-          <div className="nav-section-label">System</div>
-
-          {NAV_ITEMS.slice(5).map((item) => (
-            <div
-              key={item.id}
-              className={`nav-item ${activePage === item.id ? 'active' : ''}`}
-              onClick={() => setActivePage(item.id)}
-            >
-              <div className="nav-icon">{item.icon}</div>
-              <div className="nav-text">
-                <span className="nav-label">{item.label}</span>
-                <span className="nav-sublabel">{item.sublabel}</span>
-              </div>
-            </div>
-          ))}
-
-          {/* Footer */}
-          <div className="sidebar-footer">
-            <button className="reset-btn" onClick={handleReset}>
-              <Trash2 size={14} />
-              Clear All Data
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
-        </aside>
+        </header>
 
-        {/* ── Main content ── */}
+        {/* Mobile Navigation Drawer */}
+        <div className={`mobile-drawer ${mobileMenuOpen ? 'open' : ''}`}>
+          {NAV_ITEMS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className={`top-nav-item ${activePage === item.id ? 'active' : ''}`}
+              onClick={() => handleNavigate(item.id)}
+            >
+              {item.icon}
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Main Content Area */}
         <main className="main-content">
           <div className="page">
             {renderPage()}

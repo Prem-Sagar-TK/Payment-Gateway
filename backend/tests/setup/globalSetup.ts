@@ -1,6 +1,5 @@
 import { execSync } from 'child_process';
 
-// Set test environment variables before any module imports
 process.env['NODE_ENV'] = 'test';
 process.env['DATABASE_URL'] =
   process.env['TEST_DATABASE_URL'] ??
@@ -18,7 +17,6 @@ process.env['LOG_LEVEL'] = 'error';
 async function globalSetup() {
   console.log('\n🔧 Running global test setup...');
 
-  // Run migrations against the test database
   try {
     const cmd = process.platform === 'win32' ? 'npx.cmd prisma migrate deploy' : 'npx prisma migrate deploy';
     execSync(cmd, {

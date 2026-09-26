@@ -1,4 +1,3 @@
-// Ensure test environment variables are loaded in every Jest worker process
 process.env['NODE_ENV'] = 'test';
 process.env['DATABASE_URL'] =
   process.env['TEST_DATABASE_URL'] ??

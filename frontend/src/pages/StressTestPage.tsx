@@ -127,7 +127,6 @@ export default function StressTestPage({ onTestComplete }: Props) {
         </p>
       </div>
 
-      {/* Config card */}
       <div className="g-card">
         <div className="g-card-header">
           <div className="g-card-icon green"><Play size={20} /></div>
@@ -271,7 +270,6 @@ export default function StressTestPage({ onTestComplete }: Props) {
         </button>
       </div>
 
-      {/* Live visualizer */}
       <div className="g-card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div>
@@ -314,7 +312,6 @@ export default function StressTestPage({ onTestComplete }: Props) {
         </div>
       </div>
 
-      {/* Stats */}
       {stats && (
         <>
           <div className="stats-row" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
@@ -340,7 +337,6 @@ export default function StressTestPage({ onTestComplete }: Props) {
             </div>
           </div>
 
-          {/* Result banner */}
           <div className="alert" style={{
             background: guarantee ? 'var(--green-bg)' : sameKey ? 'var(--rose-bg)' : '#ffffff',
             borderColor: guarantee ? 'var(--green-border)' : sameKey ? 'var(--rose-border)' : 'var(--border)',
